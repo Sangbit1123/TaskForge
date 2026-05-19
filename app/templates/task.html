@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">
+    Tasks
+</h2>
+
+<div class="card p-4 mb-4">
+
+    <h4>Create Task</h4>
+
+    <form id="taskForm">
+
+        <input
+            type="text"
+            id="title"
+            class="form-control mb-3"
+            placeholder="Task Title"
+        >
+
+        <textarea
+            id="description"
+            class="form-control mb-3"
+            placeholder="Task Description"
+        ></textarea>
+
+        <select
+            id="memberSelect"
+            class="form-control mb-3"
+        >
+            <option>
+                Select Member
+            </option>
+        </select>
+
+        <select
+            id="projectSelect"
+            class="form-control mb-3"
+        >
+            <option>
+                Select Project
+            </option>
+        </select>
+
+        <select
+            id="priority"
+            class="form-control mb-3"
+        >
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+        </select>
+
+        <input
+            type="date"
+            id="dueDate"
+            class="form-control mb-3"
+        >
+
+        <button
+            class="btn btn-primary"
+            type="submit"
+        >
+            Create Task
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card p-4">
+
+    <h4 class="mb-3">
+        All Tasks
+    </h4>
+
+    <table class="table table-bordered">
+
+        <thead>
+
+            <tr>
+
+                <th>Title</th>
+
+                <th>Status</th>
+
+                <th>Priority</th>
+
+                <th>Due Date</th>
+
+                <th>Actions</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="tasksTable">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<script>
+
+async function loadTasks()
+{
+    const token =
+        localStorage.getItem("token")
+
+    let endpoint = "/tasks"
+
+    const role =
+        localStorage.getItem("role")
+
+    if(role == "member")
+    {
+        endpoint = "/my-tasks"
+    }
+
+    const response =
+        await fetch(
+            endpoint,
+            {
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    const tasks =
+        await response.json()
+
+    const table =
+        document.getElementById(
+            "tasksTable"
+        )
+
+    table.innerHTML = ""
+
+    tasks.forEach(task =>
+    {
+        let badgeColor = "secondary"
+
+        if(task.priority == "High")
+        {
+            badgeColor = "danger"
+        }
+        else if(task.priority == "Medium")
+        {
+            badgeColor = "warning"
+        }
+        else
+        {
+            badgeColor = "primary"
+        }
+
+        table.innerHTML +=
+        `
+        <tr>
+
+            <td>${task.title}</td>
+
+            <td>
+                <span class="badge bg-success">
+                    ${task.status}
+                </span>
+            </td>
+
+            <td>
+                <span class="badge bg-${badgeColor}">
+                    ${task.priority}
+                </span>
+            </td>
+
+            <td>${task.due_date}</td>
+
+            <td>
+
+                ${
+                    role == "admin"
+                    ?
+                    `
+                    <button
+                        class="btn btn-danger btn-sm"
+                        onclick="deleteTask(${task.id})"
+                    >
+                        Delete
+                    </button>
+                    `
+                    :
+                    `
+                    <select
+                        onchange="updateStatus(${task.id}, this.value)"
+                        class="form-select"
+                    >
+
+                        <option>
+                            ${task.status}
+                        </option>
+
+                        <option>
+                            Pending
+                        </option>
+
+                        <option>
+                            In Progress
+                        </option>
+
+                        <option>
+                            Completed
+                        </option>
+
+                    </select>
+                    `
+                }
+
+            </td>
+
+        </tr>
+        `
+    })
+}
+
+async function loadProjects()
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            "/projects",
+            {
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    const projects =
+        await response.json()
+
+    const select =
+        document.getElementById(
+            "projectSelect"
+        )
+
+    projects.forEach(project =>
+    {
+        select.innerHTML +=
+        `
+        <option value="${project.id}">
+            ${project.name}
+        </option>
+        `
+    })
+}
+
+document.getElementById(
+    "taskForm"
+).addEventListener(
+    "submit",
+    async function(e)
+    {
+        e.preventDefault()
+
+        const token =
+            localStorage.getItem("token")
+
+        const response =
+            await fetch(
+                "/tasks",
+                {
+                    method: "POST",
+
+                    headers:
+                    {
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify(
+                    {
+                        title:
+                            document.getElementById(
+                                "title"
+                            ).value,
+
+                        description:
+                            document.getElementById(
+                                "description"
+                            ).value,
+
+                        assigned_to:
+                            parseInt(
+                                document.getElementById(
+                                    "memberSelect"
+                                ).value
+                            ),
+
+                        project_id:
+                            parseInt(
+                                document.getElementById(
+                                    "projectSelect"
+                                ).value
+                            ),
+
+                        priority:
+                            document.getElementById(
+                                "priority"
+                            ).value,
+
+                        due_date:
+                            document.getElementById(
+                                "dueDate"
+                            ).value
+                    })
+                }
+            )
+
+        if(response.ok)
+        {
+            alert("Task Created")
+
+            loadTasks()
+        }
+        else
+        {
+            alert("Only admins can create tasks")
+        }
+    }
+)
+
+async function deleteTask(taskId)
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            `/tasks/${taskId}`,
+            {
+                method: "DELETE",
+
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    if(response.ok)
+    {
+        alert("Task Deleted")
+
+        loadTasks()
+    }
+}
+
+async function updateStatus(taskId, status)
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            `/tasks/${taskId}/status`,
+            {
+                method: "PUT",
+
+                headers:
+                {
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        `Bearer ${token}`
+                },
+
+                body: JSON.stringify(
+                {
+                    status: status
+                })
+            }
+        )
+
+    if(response.ok)
+    {
+        alert("Status Updated")
+
+        loadTasks()
+    }
+    else
+    {
+        alert("Failed to update status")
+    }
+}
+
+loadTasks()
+
+loadMembers()
+
+loadProjects()
+
+</script>
+
+{% endblock %}

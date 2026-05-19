@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">
+    Projects
+</h2>
+
+<div class="card p-4 mb-4">
+
+    <h4>Create Project</h4>
+
+    <form id="projectForm">
+
+        <input
+            type="text"
+            id="projectName"
+            class="form-control mb-3"
+            placeholder="Project Name"
+        >
+
+        <textarea
+            id="projectDescription"
+            class="form-control mb-3"
+            placeholder="Project Description"
+        ></textarea>
+
+        <button
+            class="btn btn-primary"
+            type="submit"
+        >
+            Create Project
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card p-4">
+
+    <h4 class="mb-3">
+        All Projects
+    </h4>
+
+    <table class="table table-bordered">
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Name</th>
+
+                <th>Description</th>
+
+                <th>Actions</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="projectsTable">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<script>
+
+async function loadProjects()
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            "/projects",
+            {
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    const projects =
+        await response.json()
+
+    const table =
+        document.getElementById(
+            "projectsTable"
+        )
+
+    table.innerHTML = ""
+
+    projects.forEach(project =>
+    {
+        table.innerHTML +=
+        `
+        <tr>
+
+            <td>${project.id}</td>
+
+            <td>${project.name}</td>
+
+            <td>${project.description}</td>
+
+            <td>
+
+                <button
+                    class="btn btn-danger btn-sm"
+                    onclick="deleteProject(${project.id})"
+                >
+                    Delete
+                </button>
+
+            </td>
+
+        </tr>
+        `
+    })
+}
+
+document.getElementById(
+    "projectForm"
+).addEventListener(
+    "submit",
+    async function(e)
+    {
+        e.preventDefault()
+
+        const token =
+            localStorage.getItem("token")
+
+        const response =
+            await fetch(
+                "/projects",
+                {
+                    method: "POST",
+
+                    headers:
+                    {
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify(
+                    {
+                        name:
+                            document.getElementById(
+                                "projectName"
+                            ).value,
+
+                        description:
+                            document.getElementById(
+                                "projectDescription"
+                            ).value
+                    })
+                }
+            )
+
+        if(response.ok)
+        {
+            alert("Project Created")
+
+            loadProjects()
+        }
+        else
+        {
+            alert("Only admins can create projects")
+        }
+    }
+)
+
+loadProjects()
+
+async function deleteProject(projectId)
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            `/projects/${projectId}`,
+            {
+                method: "DELETE",
+
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    const data =
+        await response.json()
+
+    if(response.ok)
+    {
+        alert(data.message)
+
+        loadProjects()
+    }
+    else
+    {
+        alert(data.detail)
+    }
+}
+
+</script>
+
+{% endblock %}

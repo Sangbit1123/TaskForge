@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">
+    Team Members
+</h2>
+
+<div class="card p-4">
+
+    <table class="table table-bordered table-hover">
+
+        <thead class="table-dark">
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Username</th>
+
+                <th>Email</th>
+
+                <th>Role</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="usersTable">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<script>
+
+async function loadUsers()
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            "/users",
+            {
+                method: "GET",
+
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    if(!response.ok)
+    {
+        alert("Failed to load users")
+
+        return
+    }
+
+    const users =
+        await response.json()
+
+    const table =
+        document.getElementById(
+            "usersTable"
+        )
+
+    table.innerHTML = ""
+
+    users.forEach(user =>
+    {
+        let badgeColor = "primary"
+
+        if(user.role == "admin")
+        {
+            badgeColor = "danger"
+        }
+
+        table.innerHTML +=
+        `
+        <tr>
+
+            <td>${user.id}</td>
+
+            <td>${user.username}</td>
+
+            <td>${user.email}</td>
+
+            <td>
+
+                <span class="badge bg-${badgeColor}">
+                    ${user.role}
+                </span>
+
+            </td>
+
+        </tr>
+        `
+    })
+}
+
+loadUsers()
+
+</script>
+
+{% endblock %}
