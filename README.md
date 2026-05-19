@@ -1,4 +1,4 @@
-# Task Manager
+# TaskForge
 
 A simple task and project management web application built with FastAPI, PostgreSQL, SQLAlchemy, and Jinja2 templates.
 
@@ -86,12 +86,7 @@ API routes are available for programmatic access.
 - `member` users can view assigned tasks and update task status.
 - Database tables are created automatically on startup via SQLAlchemy metadata.
 
-## Recommended Improvements
 
-- Add user registration restrictions and role validation.
-- Improve error handling and authentication flow.
-- Add a task member dropdown population function in `app/templates/task.html`.
-- Add dedicated tests and database migration support.
 
 ## License
 
