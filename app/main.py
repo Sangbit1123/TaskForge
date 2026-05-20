@@ -10,11 +10,12 @@ from app.routes.task_routes import router as task_router
 from app.routes.dashboard_routes import router as dashboard_router
 from app.routes.user_routes import router as user_router
 from app.routes.frontend_routes import router as frontend_router
-
+from app.models import *
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="login"
 )
+
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(project_router)
