@@ -251,6 +251,9 @@ async function loadProjects()
             "projectSelect"
         )
 
+    select.innerHTML =
+        `<option>Select Project</option>`
+
     projects.forEach(project =>
     {
         select.innerHTML +=
@@ -259,6 +262,48 @@ async function loadProjects()
             ${project.name}
         </option>
         `
+    })
+}
+
+async function loadMembers()
+{
+    const token =
+        localStorage.getItem("token")
+
+    const response =
+        await fetch(
+            "/users",
+            {
+                headers:
+                {
+                    "Authorization":
+                        `Bearer ${token}`
+                }
+            }
+        )
+
+    const users =
+        await response.json()
+
+    const select =
+        document.getElementById(
+            "memberSelect"
+        )
+
+    select.innerHTML =
+        `<option>Select Member</option>`
+
+    users.forEach(user =>
+    {
+        if(user.role == "member")
+        {
+            select.innerHTML +=
+            `
+            <option value="${user.id}">
+                ${user.username}
+            </option>
+            `
+        }
     })
 }
 
@@ -331,11 +376,15 @@ document.getElementById(
         {
             alert("Task Created")
 
+            document.getElementById(
+                "taskForm"
+            ).reset()
+
             loadTasks()
         }
         else
         {
-            alert("Only admins can create tasks")
+            alert("Failed to create task")
         }
     }
 )
